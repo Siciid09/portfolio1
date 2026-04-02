@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Oracle SQL Mastery - The Complete DRY Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style type="text/tailwindcss">
+        @layer base {
+            body { font-family: 'Inter', sans-serif; background-color: #0b1120; color: #f8fafc; }
+            pre, code { font-family: 'Fira Code', monospace; }
+        }
+        
+        @layer components {
+            /* DRY UI Components */
+            .glass-nav { @apply fixed top-0 left-0 w-full transition-transform duration-300 z-50 px-6 py-4 shadow-2xl shadow-black/50 bg-[#0b1120]/85 backdrop-blur-xl border-b border-white/5; }
+            .nav-btn { @apply px-5 py-2 border rounded-full text-sm font-semibold transition-all; }
+            .nav-btn-active { @apply bg-blue-600 text-white border-transparent shadow-[0_0_15px_rgba(37,99,235,0.5)]; }
+            .nav-btn-inactive { @apply bg-transparent border-white/10 hover:bg-white/5 text-slate-300; }
+            
+            .glass-card { @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 transition-all duration-300 hover:bg-white/10 hover:-translate-y-1; }
+            .section-title { @apply text-4xl lg:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r; }
+            .card-title { @apply text-2xl font-bold mb-6 border-b border-white/10 pb-2; }
+            
+            /* DRY Exam Components */
+            .exam-part-title { @apply text-2xl font-bold mb-6 text-white bg-white/5 p-4 rounded-xl border border-white/10; }
+            .q-box { @apply bg-black/40 p-6 rounded-xl border border-white/5; }
+            .q-text { @apply font-bold text-blue-200 mb-2 text-lg; }
+            .a-box { @apply mt-4 p-5 bg-emerald-900/20 border-l-4 border-emerald-500 rounded-r-xl text-emerald-100; }
+            
+            .code-wrong { @apply text-red-400 font-mono text-sm mb-2 line-through p-3 bg-red-900/10 rounded border border-red-500/20 block; }
+            .code-right { @apply text-emerald-400 font-mono font-bold text-sm bg-emerald-900/20 p-3 rounded border border-emerald-500/30 block mt-3; }
+            .code-block { @apply bg-[#0d1117] p-5 rounded-xl text-sm text-emerald-300 overflow-x-auto border border-emerald-500/30 shadow-inner mt-3 block; }
+        }
+
+        /* Animations */
+        .blob { position: fixed; width: 800px; height: 800px; filter: blur(120px); border-radius: 50%; z-index: -1; opacity: 0.15; animation: move 30s infinite alternate ease-in-out; pointer-events: none; }
+        .blob-1 { top: -20%; left: -10%; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); }
+        .blob-2 { bottom: -20%; right: -10%; background: linear-gradient(135deg, #059669 0%, #0891b2 100%); animation-delay: -15s; }
+        @keyframes move { from { transform: translate(-5%, -5%); } to { transform: translate(15%, 15%); } }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    </style>
+
+    <script>
+        const examDatabase = [
+            {
+                id: 1, title: "EXAM 1: The Official Final Examination", color: "text-purple-300", border: "border-purple-500/30", bg: "bg-purple-900/20",
+                desc: "Course Name: Oracle Database & SQL Basics | Total Marks: 60 | Time: 2 Hours",
+                parts: [
+                    {
+                        type: "theory", title: "PART 1 – THEORY & CONCEPTS (10 Marks)",
+                        qs: [
+                            { q: "Q1. Briefly explain the difference between Data and Information.", a: "Data represents raw facts, while Information is processed and meaningful data." },
+                            { q: "Q2. Define what a 'Database' is and mention two things it stores.", a: "A shared data structure. It stores 1) End-user data and 2) Metadata." },
+                            { q: "Q3. List two advantages of using a DBMS instead of old File Systems.", a: "Improved security, better integration, eliminates redundancy, fast retrieval." },
+                            { q: "Q4. Name the two types of databases categorized by location.", a: "Centralized (one site) and Distributed (multiple sites)." },
+                            { q: "Q5. Why is Database Design critical for a business?", a: "Good design ensures accuracy and performance. Poor design leads to errors and threatens business stability." }
+                        ]
+                    },
+                    {
+                        type: "correction", title: "PART 2 – CORRECT THE WRONG CODE (10 Marks)",
+                        qs: [
+                            { q: "Q1. Error in Table Creation", w: "CREATE Student (StID NUMBER(5) PRIMARY KEY, StName VARCHAR2(50));", r: "CREATE TABLE Student (StID NUMBER(5) PRIMARY KEY, StName VARCHAR2(50));" },
+                            { q: "Q2. Error in Data Deletion", w: "DELETE Student WHERE StID = 101;", r: "DELETE FROM Student WHERE StID = 101;" },
+                            { q: "Q3. Error in Data Updating", w: "UPDATE Student SET StAge = 22;", r: "UPDATE Student SET StAge = 22 WHERE StID = 101; -- Must include WHERE" },
+                            { q: "Q4. Error in Pattern Matching", w: "SELECT * FROM Student WHERE StName = 'A%';", r: "SELECT * FROM Student WHERE StName LIKE 'A%';" },
+                            { q: "Q5. Error in Data Insertion", w: "INSERT Student VALUES (101, 'Alice Johnson', '123 Maple St', 20);", r: "INSERT INTO Student VALUES (101, 'Alice Johnson', '123 Maple St', 20);" }
+                        ]
+                    },
+                    {
+                        type: "matching", title: "PART 3 – MATCHING COLUMNS (10 Marks)",
+                        items: [
+                            { left: "___ DDL", ans: "C", def: "A. Removes duplicate values." },
+                            { left: "___ DML", ans: "J", def: "B. Filters values within a range." },
+                            { left: "___ PRIMARY KEY", ans: "F", def: "C. Data Definition Language (e.g., CREATE, ALTER, DROP)." },
+                            { left: "___ NOT NULL", ans: "I", def: "D. Only matching rows from multiple tables." },
+                            { left: "___ DISTINCT", ans: "A", def: "E. Sorts the result set." },
+                            { left: "___ ORDER BY", ans: "E", def: "F. Unique." },
+                            { left: "___ UPPER(column)", ans: "H", def: "G. Number of rows." },
+                            { left: "___ COUNT(column)", ans: "G", def: "H. Converts text to uppercase." },
+                            { left: "___ INNER JOIN", ans: "D", def: "I. Mandatory." },
+                            { left: "___ BETWEEN", ans: "B", def: "J. Data Manipulation Language (e.g., INSERT, UPDATE)." }
+                        ]
+                    },
+                    {
+                        type: "coding", title: "PART 4 – CODE WRITING (30 Marks)",
+                        qs: [
+                            { q: "Q1. Table Creation (DDL)", desc: "Create the Departments table. DeptID is Number(5) Primary Key. DeptName is Varchar2(50) mandatory.", c: "CREATE TABLE Departments (\n    DeptID NUMBER(5) PRIMARY KEY,\n    DeptName VARCHAR2(50) NOT NULL\n);" },
+                            { q: "Q2. Data Insertion (DML)", desc: "Insert into Student table: ID is 104, Name is 'Fadumo Warsame', Address is 'Berbera', and Age is 23.", c: "INSERT INTO Student VALUES (104, 'Fadumo Warsame', 'Berbera', 23);" },
+                            { q: "Q3. Data Retrieval & Filtering", desc: "Select all columns from the Student table where the student's name starts with 'A'.", c: "SELECT * FROM Student WHERE StName LIKE 'A%';" },
+                            { q: "Q4. Group Functions", desc: "Find the average (AVG) age of all students in the Student table.", c: "SELECT AVG(StAge) FROM Student;" },
+                            { q: "Q5. Table Joins", desc: "Write an INNER JOIN. Display EmpName from Employees (e) and DeptName from Departments (d). Join on DeptID.", c: "SELECT e.EmpName, d.DeptName\nFROM Employees e\nINNER JOIN Departments d\nON e.DeptID = d.DeptID;" }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 2, title: "EXAM 2: Unit 2 Mastery (Structure & Data)", color: "text-emerald-300", border: "border-emerald-500/30", bg: "bg-emerald-900/20",
+                desc: "Focus: DDL vs DML, Table Creation, Alteration, and Data Manipulation | Total Marks: 60",
+                parts: [
+                    {
+                        type: "theory", title: "PART 1 – DDL vs DML THEORY (10 Marks)",
+                        qs: [
+                            { q: "Q1. What does DDL stand for and what is its primary purpose?", a: "Data Definition Language. It is used to define or change the structure (the container) of database objects." },
+                            { q: "Q2. What does DML stand for and what is its primary purpose?", a: "Data Manipulation Language. It is used to manage the data inside the tables." },
+                            { q: "Q3. Explain the constraints PRIMARY KEY and NOT NULL.", a: "PRIMARY KEY ensures the column values are Unique. NOT NULL ensures the column is Mandatory (cannot be empty)." },
+                            { q: "Q4. Name two Oracle-specific data types mentioned in your lectures.", a: "NUMBER and VARCHAR2." },
+                            { q: "Q5. What is the catastrophic risk of running a DELETE or UPDATE command without a WHERE clause?", a: "It will modify or permanently remove ALL rows in the table." }
+                        ]
+                    },
+                    {
+                        type: "correction", title: "PART 2 – SYNTAX CORRECTION (10 Marks)",
+                        qs: [
+                            { q: "Q1. Error in Column Addition", w: "ALTER Student ADD PhoneNumber VARCHAR2(20);", r: "ALTER TABLE Student ADD (PhoneNumber VARCHAR2(20));" },
+                            { q: "Q2. Error in Table Renaming", w: "RENAME TABLE Student TO University_Students;", r: "RENAME Student TO University_Students;" },
+                            { q: "Q3. Error in Data Insertion", w: "INSERT INTO Student (101, 'Ali');", r: "INSERT INTO Student VALUES (101, 'Ali');" },
+                            { q: "Q4. Error in Data Deletion", w: "DROP Student;", r: "DROP TABLE Student;" },
+                            { q: "Q5. Error in Specific Data Update", w: "UPDATE Student StAge = 25 WHERE StID = 101;", r: "UPDATE Student SET StAge = 25 WHERE StID = 101;" }
+                        ]
+                    },
+                    {
+                        type: "matching", title: "PART 3 – COMMAND CATEGORIZATION (10 Marks)",
+                        items: [
+                            { left: "___ CREATE", ans: "C", def: "A. Removes records permanently." },
+                            { left: "___ INSERT", ans: "B", def: "B. Adds new records into a table." },
+                            { left: "___ ALTER", ans: "D", def: "C. Builds a new table structure." },
+                            { left: "___ DELETE", ans: "A", def: "D. Changes an existing table structure." },
+                            { left: "___ DROP", ans: "F", def: "E. Retrieves data from a table." },
+                            { left: "___ SELECT", ans: "E", def: "F. Deletes a table completely." },
+                            { left: "___ UPDATE", ans: "H", def: "G. Changes the name of a table." },
+                            { left: "___ RENAME", ans: "G", def: "H. Modifies existing records in a table." },
+                            { left: "___ NUMBER(3)", ans: "J", def: "I. Data type for varying character text." },
+                            { left: "___ VARCHAR2", ans: "I", def: "J. Data type for numeric values up to 3 digits." }
+                        ]
+                    },
+                    {
+                        type: "coding", title: "PART 4 – APPLIED DDL & DML (30 Marks)",
+                        qs: [
+                            { q: "Q1. Table Modification", desc: "Write the command to add a column named 'Email' with a VARCHAR2 size of 50 to the 'Student' table.", c: "ALTER TABLE Student ADD (Email VARCHAR2(50));" },
+                            { q: "Q2. Data Insertion", desc: "Write the command to insert a student using method 2 (specifying columns). ID: 102, Name: 'Bob Smith'.", c: "INSERT INTO Student (StID, StName) VALUES (102, 'Bob Smith');" },
+                            { q: "Q3. Data Updating", desc: "Write the command to change the address of student ID 102 to '456 Oak Lane'.", c: "UPDATE Student SET StAdd = '456 Oak Lane' WHERE StID = 102;" },
+                            { q: "Q4. Table Renaming", desc: "Write the command to rename the table 'student' to 'students'.", c: "RENAME student TO students;" },
+                            { q: "Q5. Column Deletion", desc: "Write the DDL command to permanently remove the 'stphone' column from the 'student' table.", c: "ALTER TABLE student DROP (stphone);" }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 3, title: "EXAM 3: Data Retrieval & Filters", color: "text-pink-300", border: "border-pink-500/30", bg: "bg-pink-900/20",
+                desc: "Focus: SELECT, DISTINCT, WHERE, ORDER BY, Operators, LIKE, BETWEEN",
+                parts: [
+                    {
+                        type: "theory", title: "PART 1 – QUERY THEORY (10 Marks)",
+                        qs: [
+                            { q: "Q1. What is the fundamental purpose of the SELECT statement?", a: "It is the primary tool used to retrieve and display data from a database table." },
+                            { q: "Q2. Explain the function of the DISTINCT keyword.", a: "It is used to remove duplicate values from a query's result set, showing only unique entries." },
+                            { q: "Q3. What is the default sorting direction when using ORDER BY?", a: "ASC (Ascending order)." },
+                            { q: "Q4. List the three Logical Operators discussed in Unit 3.", a: "AND, OR, NOT." },
+                            { q: "Q5. What do the '%' and '_' wildcards represent when used with the LIKE operator?", a: "The '%' represents any number of characters (zero or more). The '_' represents exactly one single character." }
+                        ]
+                    },
+                    {
+                        type: "correction", title: "PART 2 – FILTER SYNTAX CORRECTION (10 Marks)",
+                        qs: [
+                            { q: "Q1. Error in Basic Select", w: "SELECT * Student;", r: "SELECT * FROM Student;" },
+                            { q: "Q2. Error in Distinct Placement", w: "SELECT DISTINCT FROM Student StAge;", r: "SELECT DISTINCT StAge FROM Student;" },
+                            { q: "Q3. Error in Range Filtering", w: "SELECT * FROM Student WHERE StAge BETWEEN 18 TO 25;", r: "SELECT * FROM Student WHERE StAge BETWEEN 18 AND 25;" },
+                            { q: "Q4. Error in Sorting Syntax", w: "SELECT * FROM Student ORDER StAge DESC;", r: "SELECT * FROM Student ORDER BY StAge DESC;" },
+                            { q: "Q5. Error in Exclusion Operator", w: "SELECT * FROM Student WHERE NOT = 20 StAge;", r: "SELECT * FROM Student WHERE NOT StAge = 20;" }
+                        ]
+                    },
+                    {
+                        type: "matching", title: "PART 3 – OPERATOR MATCHING (10 Marks)",
+                        items: [
+                            { left: "___ = ", ans: "C", def: "A. Not Equal to." },
+                            { left: "___ <> ", ans: "A", def: "B. Used for pattern matching with wildcards." },
+                            { left: "___ LIKE", ans: "B", def: "C. Equal to." },
+                            { left: "___ BETWEEN", ans: "D", def: "D. Filters within a specific, inclusive range." },
+                            { left: "___ AND", ans: "F", def: "E. Reverses the filtering condition." },
+                            { left: "___ OR", ans: "G", def: "F. Returns records where all conditions are true." },
+                            { left: "___ NOT", ans: "E", def: "G. Returns records where at least one condition is true." },
+                            { left: "___ DESC", ans: "I", def: "H. Sorts from lowest to highest." },
+                            { left: "___ ASC", ans: "H", def: "I. Sorts from highest to lowest." },
+                            { left: "___ *", ans: "J", def: "J. Retrieves all columns in a table." }
+                        ]
+                    },
+                    {
+                        type: "coding", title: "PART 4 – APPLIED FILTERING (30 Marks)",
+                        qs: [
+                            { q: "Q1. Unique Retrieval", desc: "Write a query to find all unique ages in the Student table.", c: "SELECT DISTINCT StAge FROM Student;" },
+                            { q: "Q2. Pattern Matching", desc: "Write a query to find all students whose names end with the letter 'n'.", c: "SELECT * FROM Student WHERE StName LIKE '%n';" },
+                            { q: "Q3. Logical AND Filter", desc: "Write a query to find all students who are older than 18 AND younger than 25.", c: "SELECT * FROM Student WHERE StAge > 18 AND StAge < 25;" },
+                            { q: "Q4. Sorting Results", desc: "Write a query to display all students, sorted by StAge from oldest to youngest (descending).", c: "SELECT * FROM Student ORDER BY StAge DESC;" },
+                            { q: "Q5. Combined Filtering", desc: "Write a query to select only the StName and StAge of students whose age is exactly 20.", c: "SELECT StName, StAge FROM Student WHERE StAge = 20;" }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 4, title: "EXAM 4: Advanced Functions & Joins", color: "text-amber-300", border: "border-amber-500/30", bg: "bg-amber-900/20",
+                desc: "Focus: Single-Row Functions, Aggregate Functions, and SQL Joins",
+                parts: [
+                    {
+                        type: "theory", title: "PART 1 – FUNCTION THEORY (10 Marks)",
+                        qs: [
+                            { q: "Q1. Define the difference between Single-row functions and Group functions.", a: "Single-row functions operate on each row individually returning one result per row. Group functions aggregate multiple rows into a single summary result." },
+                            { q: "Q2. List three Single-row functions covered in your labs.", a: "UPPER, LOWER, and LENGTH." },
+                            { q: "Q3. What is the purpose of the COUNT(*) function?", a: "It returns the total number of rows in a table." },
+                            { q: "Q4. What is the fundamental definition of a SQL Join?", a: "A method used to combine data from multiple tables based on a related column between them." },
+                            { q: "Q5. Explain the difference between an INNER JOIN and a LEFT JOIN.", a: "INNER JOIN returns only rows with matching values in both tables. LEFT JOIN returns all rows from the left table, plus matched rows from the right table." }
+                        ]
+                    },
+                    {
+                        type: "correction", title: "PART 2 – RELATIONAL SYNTAX (10 Marks)",
+                        qs: [
+                            { q: "Q1. Error in Single-Row Function", w: "SELECT UPPER FROM EMPLOYEES(EMPNAME);", r: "SELECT UPPER(EMPNAME) FROM EMPLOYEES;" },
+                            { q: "Q2. Error in Aggregate Syntax", w: "SELECT COUNT FROM EMPLOYEES;", r: "SELECT COUNT(*) FROM EMPLOYEES;" },
+                            { q: "Q3. Error in Join Structure", w: "SELECT E.EMPNAME FROM EMPLOYEES E INNER JOIN DEPARTMENTS D;", r: "SELECT E.EMPNAME FROM EMPLOYEES E INNER JOIN DEPARTMENTS D ON E.DEPTID = D.DEPTID; -- Missing ON clause" },
+                            { q: "Q4. Error in Value Accumulation", w: "SELECT SUM(*) FROM EMPLOYEES;", r: "SELECT SUM(STAGE) FROM EMPLOYEES; -- SUM needs a specific numeric column" },
+                            { q: "Q5. Error in Subquery Target", w: "SELECT EMPNAME FROM EMPLOYEES WHERE STAGE = MIN(STAGE);", r: "SELECT EMPNAME FROM EMPLOYEES WHERE STAGE = (SELECT MIN(STAGE) FROM EMPLOYEES);" }
+                        ]
+                    },
+                    {
+                        type: "matching", title: "PART 3 – FUNCTION MAPPING (10 Marks)",
+                        items: [
+                            { left: "___ UPPER", ans: "C", def: "A. Returns all records when there is a match in either table." },
+                            { left: "___ LOWER", ans: "E", def: "B. Calculates the average value of a column." },
+                            { left: "___ LENGTH", ans: "D", def: "C. Converts text to uppercase." },
+                            { left: "___ SUM", ans: "F", def: "D. Returns the total number of characters in a string." },
+                            { left: "___ AVG", ans: "B", def: "E. Converts text to lowercase." },
+                            { left: "___ MIN", ans: "H", def: "F. Calculates the total sum of numeric values." },
+                            { left: "___ MAX", ans: "G", def: "G. Returns the highest value in a column." },
+                            { left: "___ INNER JOIN", ans: "I", def: "H. Returns the lowest value in a column." },
+                            { left: "___ FULL JOIN", ans: "A", def: "I. Returns only rows with matching values in both tables." },
+                            { left: "___ RIGHT JOIN", ans: "J", def: "J. Returns all rows from the right table, and matched rows from the left." }
+                        ]
+                    },
+                    {
+                        type: "coding", title: "PART 4 – APPLIED JOINS & AGGREGATES (30 Marks)",
+                        qs: [
+                            { q: "Q1. Text Manipulation", desc: "Write the query to return the length of every employee's name from the EMPLOYEES table.", c: "SELECT LENGTH(EMPNAME) FROM EMPLOYEES;" },
+                            { q: "Q2. Aggregate Calculation", desc: "Write the query to find the maximum (highest) age in the EMPLOYEES table.", c: "SELECT MAX(STAGE) FROM EMPLOYEES;" },
+                            { q: "Q3. LEFT JOIN Application", desc: "Write a LEFT JOIN to list all Employee names and their Department names, linking on DeptID.", c: "SELECT E.EMPNAME, D.DEPTNAME\nFROM EMPLOYEES E\nLEFT JOIN DEPARTMENTS D\nON E.DEPTID = D.DEPTID;" },
+                            { q: "Q4. RIGHT JOIN Application", desc: "Write a RIGHT JOIN to list Employee names and Department names, linking on DeptID.", c: "SELECT E.EMPNAME, D.DEPTNAME\nFROM EMPLOYEES E\nRIGHT JOIN DEPARTMENTS D\nON E.DEPTID = D.DEPTID;" },
+                            { q: "Q5. The Subquery Trap", desc: "Write the query using a subquery to find the exact name and age of the youngest employee.", c: "SELECT EMPNAME, STAGE FROM EMPLOYEES\nWHERE STAGE = (SELECT MIN(STAGE) FROM EMPLOYEES);" }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 5, title: "EXAM 5: Real-World Scenario Testing", color: "text-blue-300", border: "border-blue-500/30", bg: "bg-blue-900/20",
+                desc: "Applying your SQL knowledge to software development architectures.",
+                parts: [
+                    {
+                        type: "theory", title: "PART 1 – ARCHITECTURAL THEORY (10 Marks)",
+                        qs: [
+                            { q: "Q1. For the 'Bedder Hotel' management system you developed, why is maintaining a DBMS better than a File System for guest records?", a: "It eliminates data redundancy, ensures consistency across bookings, provides better security for guest data, and allows fast retrieval via ad-hoc queries." },
+                            { q: "Q2. If Gollis University needs a database for  IoT entrance control system, would you recommend a Single-user or Multiuser database? Why?", a: "Multiuser, because many students and administrative staff will need to access and write entry logs concurrently." },
+                            { q: "Q3. In your 'studysom' mobile application, what SQL language category (DDL or DML) would be executed when a new user registers an account?", a: "DML (Data Manipulation Language), specifically an INSERT statement to add their data to the tables." },
+                            { q: "Q4. Explain the 'Good Design = Good Decisions' rule in the context of the 'Hankong Kenya' application.", a: "If the database design for HantiKaab is poor, the app will process inaccurate data, leading to incorrect financial or business decisions by the users." },
+                            { q: "Q5. If you needed to extract a list of users for 'arbiye', what specific clause prevents seeing the same student multiple times?", a: "The DISTINCT keyword." }
+                        ]
+                    },
+                    {
+                        type: "correction", title: "PART 2 – DEBUGGING PRODUCTION CODE (10 Marks)",
+                        qs: [
+                            { q: "Q1. GuriUp App Table Error", w: "CREATE TABLE GuriUp_Users (UserID NUMBER(5) UNIQUE KEY, UserName VARCHAR2(50));", r: "CREATE TABLE GuriUp_Users (UserID NUMBER(5) PRIMARY KEY, UserName VARCHAR2(50));" },
+                            { q: "Q2. Hotel System Update Error", w: "UPDATE Bedder_Guests RoomNum = 101 WHERE GuestID = 5;", r: "UPDATE Bedder_Guests SET RoomNum = 101 WHERE GuestID = 5;" },
+                            { q: "Q3. IoT Log Data Error", w: "SELECT * FROM IoT_Logs WHERE EntryTime BETWEEN 08:00 AND 10:00;", r: "SELECT * FROM IoT_Logs WHERE EntryTime BETWEEN '08:00' AND '10:00'; -- Time must be string/date formatted" },
+                            { q: "Q4. Student Filter Error", w: "SELECT DISTINCT(StName, StAge) FROM Gollis_Students;", r: "SELECT DISTINCT StName, StAge FROM Gollis_Students;" },
+                            { q: "Q5. Department Join Error", w: "SELECT e.Name, d.Dept FROM Gollis_Staff e FULL JOIN Gollis_Depts d;", r: "SELECT e.Name, d.Dept FROM Gollis_Staff e FULL JOIN Gollis_Depts d ON e.DeptID = d.DeptID;" }
+                        ]
+                    },
+                    {
+                        type: "matching", title: "PART 3 – APPLIED MAPPING (10 Marks)",
+                        items: [
+                            { left: "___ Adding a new 'ProfilePic' column to GuriUp", ans: "C", def: "A. MIN() Function" },
+                            { left: "___ Finding total registered users in Ardaycaawiye", ans: "G", def: "B. UPPER() Function" },
+                            { left: "___ Showing the earliest hotel booking time", ans: "A", def: "C. ALTER TABLE" },
+                            { left: "___ Capitalizing student names for Gollis IDs", ans: "B", def: "D. WHERE Clause" },
+                            { left: "___ Removing an inactive user account completely", ans: "J", def: "E. INNER JOIN" },
+                            { left: "___ Linking IoT entrance logs to Student profiles", ans: "E", def: "F. PRIMARY KEY" },
+                            { left: "___ Ensuring every IoT sensor has a unique ID", ans: "F", def: "G. COUNT(*) Function" },
+                            { left: "___ Ensuring no empty entries in Bedder Hotel names", ans: "I", def: "H. LIKE Operator" },
+                            { left: "___ Searching for a user whose name starts with 'M'", ans: "H", def: "I. NOT NULL Constraint" },
+                            { left: "___ Displaying only students older than 20", ans: "D", def: "J. DELETE Command" }
+                        ]
+                    },
+                    {
+                        type: "coding", title: "PART 4 – ARCHITECTURE DEPLOYMENT (30 Marks)",
+                        qs: [
+                            { q: "Q1. Backend Initialization", desc: "Write a DDL command to create a table named 'GuriUp_Users' with UserID (Number 5, Primary Key), and UserName (Varchar2 50, Not Null).", c: "CREATE TABLE GuriUp_Users (\n    UserID NUMBER(5) PRIMARY KEY,\n    UserName VARCHAR2(50) NOT NULL\n);" },
+                            { q: "Q2. Data Seeding", desc: "Write a DML command to insert yourself into the 'Gollis_Students' table with ID 1, Name 'Mubarik Osman', Address 'Hargeisa', Age 22.", c: "INSERT INTO Gollis_Students VALUES (1, 'Mubarik Osman', 'Hargeisa', 22);" },
+                            { q: "Q3. Audit Logging", desc: "Write a query to count the total number of records in the 'IoT_Sensors' table.", c: "SELECT COUNT(*) FROM IoT_Sensors;" },
+                            { q: "Q4. Hotel Reporting", desc: "Write a query to calculate the average (AVG) price from the 'Bedder_Rooms' table.", c: "SELECT AVG(Price) FROM Bedder_Rooms;" },
+                            { q: "Q5. System Integration", desc: "Write an INNER JOIN linking 'IoT_Logs' (l) and 'Gollis_Students' (s) using StudentID.", c: "SELECT s.StName, l.EntryTime\nFROM Gollis_Students s\nINNER JOIN IoT_Logs l\nON s.StudentID = l.StudentID;" }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 6, title: "EXAM 6: The Ultimate Comprehensive Test", color: "text-red-400", border: "border-red-500/30", bg: "bg-red-900/20",
+                desc: "The final gauntlet: Testing all 4 units concurrently.",
+                parts: [
+                    {
+                        type: "theory", title: "PART 1 – COMPREHENSIVE THEORY (10 Marks)",
+                        qs: [
+                            { q: "Q1. (Unit 1) What specific DBMS function protects data from system failures?", a: "Backup & recovery." },
+                            { q: "Q2. (Unit 2) What is the difference between DROP and DELETE?", a: "DROP is DDL and deletes the entire table structure permanently. DELETE is DML and removes data rows from inside the table." },
+                            { q: "Q3. (Unit 3) If you need to filter numeric data between 100 and 500 inclusively, what keyword do you use?", a: "BETWEEN (e.g., BETWEEN 100 AND 500)." },
+                            { q: "Q4. (Unit 4) What is the purpose of an Aggregate function?", a: "To combine (aggregate) multiple rows to return a single summary result (like SUM, AVG)." },
+                            { q: "Q5. (Unit 4) Which Join type returns all rows from the right table, plus matched rows from the left?", a: "RIGHT JOIN." }
+                        ]
+                    },
+                    {
+                        type: "correction", title: "PART 2 – FULL SPECTRUM DEBUGGING (10 Marks)",
+                        qs: [
+                            { q: "Q1. Table Creation Fault", w: "CREATE TABLE Staff (StaffID NUMBER(5) PRIMARY KEY StaffName VARCHAR2(50));", r: "CREATE TABLE Staff (StaffID NUMBER(5) PRIMARY KEY, StaffName VARCHAR2(50)); -- Missing comma" },
+                            { q: "Q2. Deletion Target Fault", w: "DELETE Student WHERE StName = 'Ahmed';", r: "DELETE FROM Student WHERE StName = 'Ahmed';" },
+                            { q: "Q3. String Formatting Fault", w: "SELECT * FROM Departments WHERE DeptName LIKE IT%;", r: "SELECT * FROM Departments WHERE DeptName LIKE 'IT%'; -- Requires quotes" },
+                            { q: "Q4. Math Function Fault", w: "SELECT SUM(EmpName) FROM Employees;", r: "SELECT SUM(StAge) FROM Employees; -- Cannot sum text strings" },
+                            { q: "Q5. Join Syntax Fault", w: "SELECT e.EmpName, d.DeptName FROM Employees e FULL JOIN Departments d;", r: "SELECT e.EmpName, d.DeptName FROM Employees e FULL JOIN Departments d ON e.DeptID = d.DeptID;" }
+                        ]
+                    },
+                    {
+                        type: "matching", title: "PART 3 – THE GRAND MATCHING (10 Marks)",
+                        items: [
+                            { left: "___ Metadata", ans: "C", def: "A. Sorts ascending natively." },
+                            { left: "___ Centralized", ans: "E", def: "B. Removes all table records without deleting structure (Requires WHERE)." },
+                            { left: "___ RENAME", ans: "G", def: "C. Information that makes a database self-describing." },
+                            { left: "___ UPDATE", ans: "J", def: "D. Returns length of a string." },
+                            { left: "___ ORDER BY", ans: "A", def: "E. A database located at a single site." },
+                            { left: "___ '%'", ans: "H", def: "F. Evaluates if all conditions are met." },
+                            { left: "___ AND", ans: "F", def: "G. DDL command to alter table identity." },
+                            { left: "___ LENGTH", ans: "D", def: "H. Wildcard representing zero or more characters." },
+                            { left: "___ FULL JOIN", ans: "I", def: "I. Returns rows when a match exists in either table." },
+                            { left: "___ DELETE", ans: "B", def: "J. DML command to modify existing data." }
+                        ]
+                    },
+                    {
+                        type: "coding", title: "PART 4 – FINAL CODE EXECUTION (30 Marks)",
+                        qs: [
+                            { q: "Q1. Structural Alteration (DDL)", desc: "Write the command to add a 'Salary' column (Number type) to the Employees table.", c: "ALTER TABLE Employees ADD (Salary NUMBER(10));" },
+                            { q: "Q2. Precise Filtering (DML)", desc: "Select all students whose Age is NOT 20 and order them by Name ascending.", c: "SELECT * FROM Student WHERE NOT StAge = 20 ORDER BY StName ASC;" },
+                            { q: "Q3. Advanced Grouping", desc: "Write the query to count the total number of departments in the Departments table.", c: "SELECT COUNT(*) FROM Departments;" },
+                            { q: "Q4. Subquery Application", desc: "Write a query to find the Employee Name with the maximum age.", c: "SELECT EmpName FROM Employees\nWHERE StAge = (SELECT MAX(StAge) FROM Employees);" },
+                            { q: "Q5. Complex Join Application", desc: "Write a LEFT JOIN between Employees (e) and Departments (d) on DeptID, retrieving EmpName and DeptName.", c: "SELECT e.EmpName, d.DeptName\nFROM Employees e\nLEFT JOIN Departments d\nON e.DeptID = d.DeptID;" }
+                        ]
+                    }
+                ]
+            }
+        ];
+    </script>
+
+</head>
+<body :class="showSaliga ? 'overflow-hidden h-screen' : 'overflow-x-hidden custom-scrollbar'" class="antialiased" 
+      x-data="{ 
+          showSaliga: true,
+          activeTab: 'unit1', 
+          showAnswers: false,
+          showNav: true,
+          lastScrollY: 0,
+          activeExam: 1,
+          totalExams: 6,
+          exams: examDatabase
+      }"
+     @scroll.window="showNav = window.scrollY <= lastScrollY || window.scrollY < 50; lastScrollY = window.scrollY;">
+
+    <div x-show="showSaliga" x-transition.opacity.duration.700ms class="fixed inset-0 z-[100] w-screen h-screen flex items-center justify-center bg-[#0b1120]/80 backdrop-blur-xl">
+        <div class="bg-white/5 backdrop-blur-md max-w-lg w-full mx-4 text-center border border-emerald-500/40 rounded-[2rem] p-8 shadow-[0_0_80px_rgba(16,185,129,0.25)] relative overflow-hidden transform transition-all">
+            
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-500/20 rounded-full blur-[60px]"></div>
+            <div class="absolute bottom-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-[50px]"></div>
+            
+            <div class="relative z-10">
+                <i data-lucide="moon-star" class="w-14 h-14 mx-auto text-emerald-400 mb-6 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]"></i>
+                
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-amber-200 to-emerald-300 drop-shadow-sm leading-relaxed" style="font-family: 'Amiri', serif; line-height: 1.8;" dir="rtl">
+                    اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ
+                </h2>
+                
+                <p class="text-2xl font-medium text-slate-200 mb-10 tracking-wide">
+                    Ku sali xabiibka <span class="text-emerald-400 font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">(scw)</span>
+                </p>
+                
+                <button @click="showSaliga = false" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-400 text-white font-bold text-lg hover:from-emerald-500 hover:to-emerald-300 transition-all shadow-[0_0_20px_rgba(16,185,129,0.4)] active:scale-95 border border-emerald-300/30">
+                    Waan Ku Saliyay (Masha'Allah)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <nav :class="showNav ? 'translate-y-0' : '-translate-y-full'" class="glass-nav">
+        <div class="max-w-7xl mx-auto flex flex-col xl:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i data-lucide="database" class="text-blue-500 w-8 h-8"></i>
+                <h1 class="text-2xl font-bold tracking-tight">Oracle<span class="text-blue-500">DB</span><span class="font-light text-slate-400 text-lg ml-2">Complete Course</span></h1>
+            </div>
+            <div class="flex flex-wrap justify-center gap-2">
+                <button @click="activeTab = 'unit1'; window.scrollTo(0,0)" :class="activeTab === 'unit1' ? 'nav-btn-active' : 'nav-btn-inactive'" class="nav-btn">Unit 1</button>
+                <button @click="activeTab = 'unit2'; window.scrollTo(0,0)" :class="activeTab === 'unit2' ? 'nav-btn-active' : 'nav-btn-inactive'" class="nav-btn">Unit 2</button>
+                <button @click="activeTab = 'unit3'; window.scrollTo(0,0)" :class="activeTab === 'unit3' ? 'nav-btn-active' : 'nav-btn-inactive'" class="nav-btn">Unit 3</button>
+                <button @click="activeTab = 'unit4'; window.scrollTo(0,0)" :class="activeTab === 'unit4' ? 'nav-btn-active' : 'nav-btn-inactive'" class="nav-btn">Unit 4</button>
+                <button @click="activeTab = 'exam'; window.scrollTo(0,0)" :class="activeTab === 'exam' ? 'bg-purple-600 text-white border-transparent shadow-[0_0_15px_rgba(147,51,234,0.5)]' : 'bg-transparent border-purple-500/30 hover:bg-purple-500/10 text-purple-300'" class="nav-btn"><i data-lucide="swords" class="inline w-4 h-4 mr-2"></i>Exam Center</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 pt-40 pb-24">
+
+        <section x-show="activeTab === 'unit1'" x-transition.opacity.duration.400ms>
+            <div class="mb-10 text-center">
+                <h2 class="section-title from-blue-400 to-emerald-400">Unit 1: Database Systems</h2>
+                <p class="text-slate-400 text-lg">Chapter 01 Complete Breakdown - From Data to Design</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="glass-card">
+                    <h3 class="card-title text-blue-300">Data vs Information</h3>
+                    <ul class="space-y-4">
+                        <li class="q-box"><span class="q-text block">Data</span> Raw facts.</li>
+                        <li class="q-box"><span class="q-text block">Information</span> Processed & meaningful data. Good decisions need good information.</li>
+                        <li class="q-box"><span class="q-text block">Why Information Matters</span> Accurate information → correct decisions. Databases store key business data.</li>
+                    </ul>
+                </div>
+                <div class="glass-card">
+                    <h3 class="card-title text-blue-300">DBMS Concepts</h3>
+                    <ul class="space-y-4">
+                        <li class="q-box"><span class="font-bold text-emerald-400 block mb-2 text-lg">What Is a Database?</span> Shared data structure. Stores end-user data & metadata. Self-describing.</li>
+                        <li class="q-box"><span class="font-bold text-emerald-400 block mb-2 text-lg">What Is a DBMS?</span> Software that manages databases. Ensures security & consistency. Allows querying (SQL).</li>
+                        <li class="q-box"><span class="font-bold text-emerald-400 block mb-2 text-lg">Importance of Database Design</span> Ensures accuracy & performance. Poor design leads to errors. Critical for business stability. Good design = good decisions.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <div class="glass-card lg:col-span-2 border-red-500/20">
+                    <h3 class="card-title text-red-300">File Systems → Databases</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-bold text-slate-400 mb-4 uppercase text-sm tracking-wider flex items-center gap-2"><i data-lucide="x-circle" class="text-red-500"></i> File System Problems</h4>
+                            <ul class="space-y-3 text-slate-300">
+                                <li class="p-3 bg-red-900/10 rounded-lg border border-red-500/10">1. Redundancy</li>
+                                <li class="p-3 bg-red-900/10 rounded-lg border border-red-500/10">2. Inconsistency</li>
+                                <li class="p-3 bg-red-900/10 rounded-lg border border-red-500/10">3. No ad-hoc queries</li>
+                                <li class="p-3 bg-red-900/10 rounded-lg border border-red-500/10">4. Poor security</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-400 mb-4 uppercase text-sm tracking-wider flex items-center gap-2"><i data-lucide="check-circle" class="text-emerald-500"></i> Advantages of DBMS</h4>
+                            <ul class="space-y-3 text-slate-300">
+                                <li class="p-3 bg-emerald-900/10 rounded-lg border border-emerald-500/10">1. Eliminates redundancy</li>
+                                <li class="p-3 bg-emerald-900/10 rounded-lg border border-emerald-500/10">2. Improved security</li>
+                                <li class="p-3 bg-emerald-900/10 rounded-lg border border-emerald-500/10">3. Better integration</li>
+                                <li class="p-3 bg-emerald-900/10 rounded-lg border border-emerald-500/10">4. Fast retrieval</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card border-purple-500/20">
+                    <h3 class="card-title text-purple-300">Types of Databases</h3>
+                    <div class="space-y-6">
+                        <div><p class="text-xs uppercase text-slate-500 font-bold mb-2">By Users</p><p class="bg-black/30 p-3 rounded-lg border border-white/5 text-sm">Single-user vs. Multiuser</p></div>
+                        <div><p class="text-xs uppercase text-slate-500 font-bold mb-2">By Location</p><p class="bg-black/30 p-3 rounded-lg border border-white/5 text-sm">Centralized vs. Distributed</p></div>
+                        <div><p class="text-xs uppercase text-slate-500 font-bold mb-2">By Purpose</p><p class="bg-black/30 p-3 rounded-lg border border-white/5 text-sm">Operational vs. Data Warehouse</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card bg-blue-900/10 border-blue-500/20 text-center">
+                <h3 class="card-title text-blue-200 border-blue-500/30 text-center">DBMS Main Functions & Conclusion</h3>
+                <div class="grid md:grid-cols-4 gap-4 mb-6">
+                    <div class="q-box"><i data-lucide="book-open" class="mx-auto mb-2 text-blue-400"></i><span class="text-sm font-bold block">Data dictionary</span></div>
+                    <div class="q-box"><i data-lucide="shield" class="mx-auto mb-2 text-blue-400"></i><span class="text-sm font-bold block">Integrity enforcement</span></div>
+                    <div class="q-box"><i data-lucide="hard-drive-download" class="mx-auto mb-2 text-blue-400"></i><span class="text-sm font-bold block">Backup & recovery</span></div>
+                    <div class="q-box"><i data-lucide="users" class="mx-auto mb-2 text-blue-400"></i><span class="text-sm font-bold block">Multiuser access</span></div>
+                </div>
+                <div class="bg-blue-600/20 p-6 rounded-2xl border border-blue-500/30">
+                    <p class="font-bold text-blue-100 text-lg mb-2">Conclusion Summary</p>
+                    <p class="text-slate-300">DBMS solves file system limitations, ensures accurate & consistent data, and proves that <span class="text-white font-bold">good design = good decisions</span>.</p>
+                </div>
+            </div>
+        </section>
+
+        <section x-show="activeTab === 'unit2'" x-transition.opacity.duration.400ms>
+            <div class="mb-10 text-center">
+                <h2 class="section-title from-emerald-400 to-cyan-400">Unit 2: Oracle SQL Basics</h2>
+                <p class="text-slate-400 text-lg">DDL vs DML and Complete Practical Steps</p>
+            </div>
+
+            <div class="glass-card mb-8">
+                <h3 class="card-title text-emerald-300">What is SQL?</h3>
+                <p class="text-slate-300 mb-4">SQL is used to: Create database objects, Insert and manage data, and Modify structures. Oracle uses data types like <code>NUMBER</code> and <code>VARCHAR2</code>.</p>
+                
+                <div class="grid md:grid-cols-2 gap-8 mt-8">
+                    <div class="bg-emerald-900/10 border border-emerald-500/30 p-8 rounded-2xl">
+                        <h4 class="text-2xl font-bold text-emerald-400 mb-4 border-b border-emerald-500/30 pb-2">DDL (Data Definition)</h4>
+                        <ul class="space-y-4 font-mono text-sm mt-6">
+                            <li class="flex gap-3"><span class="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded">CREATE</span> <span>Build new objects.</span></li>
+                            <li class="flex gap-3"><span class="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded">ALTER</span> <span>Change structure.</span></li>
+                            <li class="flex gap-3"><span class="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded">DROP</span> <span>Delete permanently.</span></li>
+                            <li class="flex gap-3"><span class="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded">RENAME</span> <span>Change table name.</span></li>
+                        </ul>
+                    </div>
+                    <div class="bg-cyan-900/10 border border-cyan-500/30 p-8 rounded-2xl">
+                        <h4 class="text-2xl font-bold text-cyan-400 mb-4 border-b border-cyan-500/30 pb-2">DML (Data Manipulation)</h4>
+                        <ul class="space-y-4 font-mono text-sm mt-6">
+                            <li class="flex gap-3"><span class="bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded">INSERT</span> <span>Add new records.</span></li>
+                            <li class="flex gap-3"><span class="bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded">UPDATE</span> <span>Modify existing records.</span></li>
+                            <li class="flex gap-3"><span class="bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded">DELETE</span> <span>Remove data permanently.</span></li>
+                            <li class="flex gap-3"><span class="bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded">SELECT</span> <span>Retrieve data.</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <div class="glass-card p-0 overflow-hidden border-slate-700">
+                    <div class="bg-slate-800/80 px-6 py-4 border-b border-white/5"><span class="font-bold text-emerald-300 text-lg">Lab 1: CREATE TABLE (DDL)</span></div>
+                    <div class="p-6">
+                        <p class="text-sm text-slate-400 mb-4">PRIMARY KEY = Unique. NOT NULL = Mandatory.</p>
+                        <pre class="code-block"><span class="text-pink-400">CREATE TABLE</span> Student (
+    StID <span class="text-amber-300">NUMBER(5)</span> <span class="text-blue-400">PRIMARY KEY</span>,
+    StName <span class="text-amber-300">VARCHAR2(50)</span> <span class="text-blue-400">NOT NULL</span>,
+    StAdd <span class="text-amber-300">VARCHAR2(100)</span>,
+    StAge <span class="text-amber-300">NUMBER(3)</span>
+);</pre>
+                    </div>
+                </div>
+                <div class="glass-card p-0 overflow-hidden border-slate-700">
+                    <div class="bg-slate-800/80 px-6 py-4 border-b border-white/5"><span class="font-bold text-emerald-300 text-lg">Lab 2: INSERT Command (DML)</span></div>
+                    <div class="p-6">
+                        <pre class="code-block"><span class="text-slate-500">-- Method 1: Insert into all columns</span>
+<span class="text-pink-400">INSERT INTO</span> Student <span class="text-blue-400">VALUES</span> (101, <span class="text-green-400">'Alice Johnson'</span>, <span class="text-green-400">'123 Maple St'</span>, 20);
+<span class="text-slate-500">-- Method 2: Insert into selected columns</span>
+<span class="text-pink-400">INSERT INTO</span> Student (StID, StName) <span class="text-blue-400">VALUES</span> (102, <span class="text-green-400">'Bob Smith'</span>);</pre>
+                    </div>
+                </div>
+                <div class="glass-card p-0 overflow-hidden border-slate-700">
+                    <div class="bg-slate-800/80 px-6 py-4 border-b border-white/5"><span class="font-bold text-red-400 text-lg">Lab 3 & 4: UPDATE & DELETE (DML)</span></div>
+                    <div class="p-6">
+                        <pre class="code-block"><span class="text-pink-400">UPDATE</span> Student <span class="text-blue-400">SET</span> StAdd = <span class="text-green-400">'456 Oak Lane'</span> <span class="text-pink-400">WHERE</span> StID = 102;
+<span class="text-pink-400">DELETE FROM</span> Student <span class="text-pink-400">WHERE</span> StID = 101;</pre>
+                    </div>
+                </div>
+                <div class="glass-card p-0 overflow-hidden border-slate-700">
+                    <div class="bg-slate-800/80 px-6 py-4 border-b border-white/5"><span class="font-bold text-purple-400 text-lg">Lab 5: ALTER, RENAME, DROP (DDL)</span></div>
+                    <div class="p-6">
+                        <pre class="code-block"><span class="text-pink-400">ALTER TABLE</span> Student <span class="text-blue-400">ADD</span> (PhoneNumber <span class="text-amber-300">VARCHAR2(20)</span>);
+<span class="text-pink-400">RENAME</span> Student <span class="text-blue-400">TO</span> University_Students;
+<span class="text-red-400">DROP TABLE</span> Student;</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section x-show="activeTab === 'unit3'" x-transition.opacity.duration.400ms>
+            <div class="mb-10 text-center">
+                <h2 class="section-title from-purple-400 to-pink-400">Unit 3: Data Retrieval & Filtering</h2>
+                <p class="text-slate-400 text-lg">Querying, Filtering, Sorting, and Pattern Matching</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="space-y-8">
+                    <div class="glass-card">
+                        <h3 class="card-title text-purple-300">Lab 1 & 2: SELECT & DISTINCT</h3>
+                        <pre class="code-block"><span class="text-pink-400">SELECT</span> * <span class="text-pink-400">FROM</span> Student;
+<span class="text-pink-400">SELECT DISTINCT</span> StAge <span class="text-pink-400">FROM</span> Student;</pre>
+                    </div>
+                    <div class="glass-card">
+                        <h3 class="card-title text-purple-300">Lab 3: WHERE Clause</h3>
+                        <p class="text-sm text-slate-400 mb-4">Operators: =, >, <, >=, <=, <></p>
+                        <pre class="code-block"><span class="text-pink-400">SELECT</span> * <span class="text-pink-400">FROM</span> Student <span class="text-pink-400">WHERE</span> StAge > 20;</pre>
+                    </div>
+                </div>
+                <div class="space-y-8">
+                    <div class="glass-card">
+                        <h3 class="card-title text-pink-300">Lab 4 & 5: ORDER BY & Logicals</h3>
+                        <pre class="code-block"><span class="text-pink-400">SELECT</span> * <span class="text-pink-400">FROM</span> Student <span class="text-pink-400">ORDER BY</span> StAge <span class="text-blue-400">DESC</span>;
+<span class="text-pink-400">SELECT</span> * <span class="text-pink-400">FROM</span> Student <span class="text-pink-400">WHERE</span> StAge > 18 <span class="text-blue-400">AND</span> StAge < 25;</pre>
+                    </div>
+                    <div class="glass-card">
+                        <h3 class="card-title text-amber-300">Lab 6 & 7: LIKE & BETWEEN</h3>
+                        <pre class="code-block"><span class="text-pink-400">SELECT</span> * <span class="text-pink-400">FROM</span> Student <span class="text-pink-400">WHERE</span> StName <span class="text-blue-400">LIKE</span> <span class="text-green-400">'A%'</span>;
+<span class="text-pink-400">SELECT</span> * <span class="text-pink-400">FROM</span> Student <span class="text-pink-400">WHERE</span> StAge <span class="text-blue-400">BETWEEN</span> 18 <span class="text-blue-400">AND</span> 25;</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section x-show="activeTab === 'unit4'" x-transition.opacity.duration.400ms>
+            <div class="mb-10 text-center">
+                <h2 class="section-title from-amber-400 to-orange-500">Unit 4: Functions & Joins</h2>
+                <p class="text-slate-400 text-lg">Single-Row, Aggregate Grouping, and Relationships</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="space-y-8">
+                    <div class="glass-card">
+                        <h3 class="card-title text-orange-300">Lab 1: Single-row Functions</h3>
+                        <p class="text-sm text-slate-400 mb-4">Operate on each row individually.</p>
+                        <pre class="code-block"><span class="text-pink-400">SELECT UPPER</span>(EMPNAME) <span class="text-pink-400">FROM</span> EMPLOYEES;
+<span class="text-pink-400">SELECT LOWER</span>(EMPNAME) <span class="text-pink-400">FROM</span> EMPLOYEES;
+<span class="text-pink-400">SELECT LENGTH</span>(EMPNAME) <span class="text-pink-400">FROM</span> EMPLOYEES;</pre>
+                    </div>
+                    <div class="glass-card">
+                        <h3 class="card-title text-orange-300">Lab 2: Group Functions</h3>
+                        <p class="text-sm text-slate-400 mb-4">Aggregate rows to return a single result.</p>
+                        <pre class="code-block"><span class="text-pink-400">SELECT COUNT</span>(*) <span class="text-pink-400">FROM</span> EMPLOYEES;
+<span class="text-pink-400">SELECT SUM</span>(STAGE) <span class="text-pink-400">FROM</span> EMPLOYEES;
+<span class="text-pink-400">SELECT MAX</span>(STAGE) <span class="text-pink-400">FROM</span> EMPLOYEES;</pre>
+                    </div>
+                </div>
+                <div class="glass-card h-full">
+                    <h3 class="card-title text-amber-400">Lab 3 & 4: SQL Joins</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="font-bold text-white mb-2 uppercase text-sm tracking-widest">INNER JOIN (Matching Only)</h4>
+                            <pre class="code-block"><span class="text-pink-400">SELECT</span> E.EMPNAME, D.DEPTNAME 
+<span class="text-pink-400">FROM</span> EMPLOYEES E <span class="text-blue-400">INNER JOIN</span> DEPARTMENTS D
+<span class="text-blue-400">ON</span> E.DEPTID = D.DEPTID;</pre>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white mb-2 uppercase text-sm tracking-widest">LEFT JOIN (All Left + Matches)</h4>
+                            <pre class="code-block"><span class="text-pink-400">SELECT</span> E.EMPNAME, D.DEPTNAME 
+<span class="text-pink-400">FROM</span> EMPLOYEES E <span class="text-blue-400">LEFT JOIN</span> DEPARTMENTS D
+<span class="text-blue-400">ON</span> E.DEPTID = D.DEPTID;</pre>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white mb-2 uppercase text-sm tracking-widest">FULL JOIN (All Records)</h4>
+                            <pre class="code-block"><span class="text-pink-400">SELECT</span> E.EMPNAME, D.DEPTNAME 
+<span class="text-pink-400">FROM</span> EMPLOYEES E <span class="text-blue-400">FULL JOIN</span> DEPARTMENTS D
+<span class="text-blue-400">ON</span> E.DEPTID = D.DEPTID;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section x-show="activeTab === 'exam'" x-transition.opacity.duration.400ms>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-white/10 pb-6 gap-6">
+                <div class="text-center md:text-left">
+                    <h2 class="text-5xl font-extrabold flex items-center justify-center md:justify-start gap-4 text-purple-400 drop-shadow-[0_0_10px_rgba(147,51,234,0.5)]">
+                        <i data-lucide="award" class="w-12 h-12"></i> EXAM CENTER
+                    </h2>
+                    <p class="text-slate-400 mt-2 text-lg">Interactive Preparation Environment</p>
+                </div>
+                
+                <div class="flex flex-col items-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/10">
+                    <div class="flex items-center gap-4">
+                        <button @click="if(activeExam > 1) { activeExam--; showAnswers=false; }" class="nav-btn bg-white/5 hover:bg-white/10 p-2" :class="activeExam === 1 ? 'opacity-30 cursor-not-allowed' : ''"><i data-lucide="chevron-left"></i></button>
+                        <span class="font-bold text-xl w-32 text-center text-purple-300">Exam <span x-text="activeExam"></span> of 6</span>
+                        <button @click="if(activeExam < 6) { activeExam++; showAnswers=false; }" class="nav-btn bg-white/5 hover:bg-white/10 p-2" :class="activeExam === 6 ? 'opacity-30 cursor-not-allowed' : ''"><i data-lucide="chevron-right"></i></button>
+                    </div>
+                    
+                    <button @click="showAnswers = !showAnswers" class="flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all shadow-lg text-sm uppercase tracking-wider w-full justify-center border" :class="showAnswers ? 'bg-red-900/50 text-red-300 border-red-500/50 hover:bg-red-800/50' : 'bg-emerald-900/50 text-emerald-300 border-emerald-500/50 hover:bg-emerald-800/50'">
+                        <i :data-lucide="showAnswers ? 'eye-off' : 'eye'" class="w-5 h-5"></i>
+                        <span x-text="showAnswers ? 'Hide Solutions' : 'Show Solutions'"></span>
+                    </button>
+                </div>
+            </div>
+
+            <template x-for="exam in exams" :key="exam.id">
+                <div x-show="activeExam === exam.id" x-transition>
+                    
+                    <div :class="`${exam.bg} border ${exam.border}`" class="p-6 rounded-2xl mb-8 text-center shadow-lg">
+                        <h3 :class="exam.color" class="text-2xl font-bold" x-text="exam.title"></h3>
+                        <p class="text-slate-300 mt-2 font-medium" x-text="exam.desc"></p>
+                    </div>
+
+                    <template x-for="part in exam.parts" :key="part.title">
+                        <div class="glass-card mb-8">
+                            <h3 class="exam-part-title" x-text="part.title"></h3>
+                            
+                            <div class="space-y-6">
+                                
+                                <template x-if="part.type === 'theory'">
+                                    <template x-for="(item, i) in part.qs" :key="i">
+                                        <div>
+                                            <p class="q-text" x-text="item.q"></p>
+                                            <div x-show="showAnswers" class="a-box" x-transition>
+                                                <strong>Answer:</strong> <span x-text="item.a"></span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <template x-if="part.type === 'correction'">
+                                    <template x-for="(item, i) in part.qs" :key="i">
+                                        <div class="q-box">
+                                            <p class="q-text" x-text="item.q"></p>
+                                            <code class="code-wrong" x-text="item.w"></code>
+                                            <div x-show="showAnswers" x-transition>
+                                                <code class="code-right" x-text="item.r"></code>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <template x-if="part.type === 'matching'">
+                                    <div class="grid md:grid-cols-2 gap-12">
+                                        <div class="space-y-4 font-mono text-lg">
+                                            <template x-for="(item, i) in part.items" :key="i">
+                                                <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                                                    <span x-text="item.left"></span> 
+                                                    <span x-show="showAnswers" x-text="item.ans" class="text-emerald-400 font-bold bg-emerald-900/30 px-3 py-1 rounded border border-emerald-500/30 shadow-sm" x-transition></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="text-sm text-slate-300 space-y-4 bg-black/40 p-6 rounded-2xl border border-white/5">
+                                            <template x-for="(item, i) in part.items" :key="i">
+                                                <p class="hover:text-white transition p-2 hover:bg-white/5 rounded"><strong x-text="item.def.substring(0,3)"></strong><span x-text="item.def.substring(3)"></span></p>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template x-if="part.type === 'coding'">
+                                    <template x-for="(item, i) in part.qs" :key="i">
+                                        <div class="q-box">
+                                            <p class="q-text" x-text="item.q"></p>
+                                            <p class="mb-4 text-slate-300" x-text="item.desc"></p>
+                                            <div x-show="showAnswers" x-transition>
+                                                <pre class="code-block" x-text="item.c"></pre>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </section>
+    </main>
+
+    <footer class="text-center py-10 border-t border-white/10 mt-10 glass bg-black/50">
+        <p class="text-slate-400 text-sm font-medium tracking-wide">
+            Ultimate Oracle SQL Study Guide &copy; 2026<br>
+            <span class="opacity-50 text-xs mt-2 block">Prepared for Mubarik Osman — Gollis University, Hargeisa</span>
+        </p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
