@@ -3,133 +3,828 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ASP.NET MVC Complete Study Guide</title>
     <style>
-        /* Import a clean, modern geometric font */
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap');
+        /* Modern CSS Variables */
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --bg-body: #f1f5f9;
+            --bg-surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --sidebar-w: 320px;
+            --code-bg: #1e293b;
+            --code-text: #f8fafc;
+            --highlight: #eff6ff;
+        }
+
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
             overflow: hidden;
-            background-color: #0f172a; /* Fallback dark color */
+            line-height: 1.7;
         }
 
-        /* 1. Animated Moving Gradient Background */
-        .bg-animated {
-            background: linear-gradient(-45deg, #020617, #1e1b4b, #312e81, #0f172a);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            height: 100vh;
-            width: 100vw;
+        /* Top Navigation (Mobile Hamburger) */
+        .mobile-header {
+            display: none;
+            background-color: var(--bg-surface);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
             position: fixed;
             top: 0;
-            left: 0;
-            z-index: -2;
+            width: 100%;
+            z-index: 100;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .hamburger {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-main);
         }
 
-        /* 2. Floating Ambient Orbs */
-        .orb {
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-w);
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            overflow-y: auto;
             position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            z-index: -1;
-            animation: float 20s infinite ease-in-out alternate;
+            left: 0;
+            top: 0;
+            z-index: 50;
+            transition: transform 0.3s ease;
         }
 
-        .orb-1 {
-            width: 40vw;
-            height: 40vw;
-            background: rgba(99, 102, 241, 0.4); /* Indigo glow */
-            top: -10vh;
-            left: -10vw;
+        .sidebar-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--bg-surface);
+            position: sticky;
+            top: 0;
         }
 
-        .orb-2 {
-            width: 50vw;
-            height: 50vw;
-            background: rgba(236, 72, 153, 0.25); /* Pink glow */
-            bottom: -20vh;
-            right: -10vw;
-            animation-delay: -5s;
+        .sidebar-header h2 {
+            color: var(--primary-dark);
+            font-size: 1.5rem;
+            font-weight: 800;
         }
 
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(5vw, 5vh) scale(1.1); }
+        .nav-menu {
+            list-style: none;
+            padding: 1rem 0;
         }
 
-        /* 3. Glassmorphism Card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .nav-menu li a {
+            display: block;
+            padding: 1rem 2rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            border-left: 4px solid transparent;
+            transition: all 0.2s ease;
         }
 
-        /* 4. Smooth Reveal Animations */
-        .reveal {
-            opacity: 0;
-            transform: translateY(40px);
-            animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .nav-menu li a:hover {
+            background-color: var(--bg-body);
+            color: var(--primary-dark);
         }
-        
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
 
-        @keyframes revealUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        .nav-menu li a.active {
+            background-color: var(--highlight);
+            color: var(--primary-dark);
+            border-left-color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .content-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 3rem;
+            background-color: var(--bg-surface);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.02);
+        }
+
+        /* Typography & Formatting */
+        .section-container {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .section-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--highlight);
+            padding-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--text-main);
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin: 2rem 0 1rem;
+            color: var(--text-main);
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        ul, ol {
+            margin: 0 0 1.5rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* Image Placeholder styling */
+        .diagram {
+            background-color: var(--bg-body);
+            border: 2px dashed #cbd5e1;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 8px;
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Code Block Styling */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-size: 1rem;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .code-header {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: var(--primary);
+            color: white;
+            padding: 0.2rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-bottom-left-radius: 8px;
+        }
+
+        code {
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .error-block {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 1.5rem;
+            border-left: 4px solid #ef4444;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        /* Q&A Section */
+        .qa-box {
+            background-color: var(--highlight);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .qa-box h4 {
+            font-size: 1.2rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .mobile-header { display: flex; }
+            .sidebar {
+                transform: translateX(-100%);
             }
-        }
-
-        /* Gradient Text Utility */
-        .text-gradient {
-            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding-top: 60px;
+            }
+            .content-wrapper {
+                padding: 2rem 1.5rem;
+            }
         }
     </style>
 </head>
-<body class="text-white h-screen w-screen flex items-center justify-center relative px-6">
+<body>
 
-    <div class="bg-animated"></div>
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
+    <header class="mobile-header">
+        <h2>MVC Study Guide</h2>
+        <button class="hamburger" id="menuToggle" aria-label="Toggle Menu">☰ Menu</button>
+    </header>
 
-    <div class="glass-card p-10 md:p-16 lg:p-20 rounded-3xl max-w-3xl w-full text-center z-10 flex flex-col items-center reveal">
-        
-        <h1 class="text-8xl md:text-[12rem] font-black leading-none tracking-tighter text-gradient reveal delay-1 drop-shadow-2xl mb-4">
-            404
-        </h1>
-        
-        <h2 class="text-2xl md:text-4xl font-bold mb-6 tracking-tight text-white reveal delay-2">
-            Lost in the digital void
-        </h2>
-        
-        <p class="text-slate-400 text-base md:text-lg max-w-lg mb-10 reveal delay-3 leading-relaxed">
-            The page you are looking for might have been removed, had its name changed, or is temporarily unavailable. Let's get you back to familiar territory.
-        </p>
-        
-        <a href="/" class="reveal delay-3 group relative inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white transition-all duration-300 bg-white/10 border border-white/20 rounded-full hover:bg-white/20 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:-translate-y-1 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50 focus:ring-offset-[#0f172a]">
-            <span>Return to Homepage</span>
-            <svg class="w-5 h-5 ml-3 transition-transform duration-300 group-hover:translate-x-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-        </a>
-        
-    </div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>MVC Study Guide</h2>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#chapter1" class="nav-link" data-target="chapter1">Chapter 1: Intro to MVC</a></li>
+            <li><a href="#chapter2" class="nav-link" data-target="chapter2">Chapter 2: Building First App</a></li>
+            <li><a href="#chapter3" class="nav-link" data-target="chapter3">Chapter 3: Controllers & Models</a></li>
+            <li><a href="#chapter4" class="nav-link" data-target="chapter4">Chapter 4: Views & EF</a></li>
+            <li><a href="#qa" class="nav-link" data-target="qa">Complete Q&A</a></li>
+            <li><a href="#summary" class="nav-link" data-target="summary">Final Summary</a></li>
+        </ul>
+    </aside>
 
+    <main class="main-content" id="mainScroll">
+        <div class="content-wrapper">
+
+            <article id="chapter1" class="section-container">
+                <h1>Chapter 1: Introduction to Asp.net Mvc</h1>
+                
+                <h2>MVC Architecture</h2>
+                <p>In this section, you will get an overview of MVC architecture. The MVC architectural pattern has existed for a long time in software engineering. All most all the languages use MVC with slight variation, but conceptually it remains the same.</p>
+                <p>Let's understand the MVC architecture in ASP.NET. MVC stands for Model, View and Controller. MVC separates application into three components - Model, View and Controller.</p>
+                
+                <p><strong>Model:</strong> Model represents shape of the data and business logic. It maintains the data of the application. Model objects retrieve and store model state in a database. Model is a data and business logic.</p>
+                
+                <p><strong>View:</strong> View is a user interface. View display data using model to the user and also enables them to modify the data. View is a User Interface.</p>
+                
+                <p><strong>Controller:</strong> Controller handles the user request. Typically, user interact with View, which in-turn raises appropriate URL request, this request will be handled by a controller. The controller renders the appropriate view with the model data as a response. Controller is a request handler.</p>
+                
+                <p>The following figure illustrates the interaction between Model, View and Controller.</p>
+                
+                <div class="diagram">
+                    (Image Diagram: A triangle showing interaction between View, Controller, and Model. View sends request to Controller. Controller renders View. Controller manipulates Model. Model displays to View.)<br>
+                    <strong>MVC Architecture</strong>
+                </div>
+
+                <p>The following figure illustrates the flow of the user's request in ASP.NET MVC.</p>
+
+                <div class="diagram">
+                    (Image Diagram: User enters URL in Browser. Browser sends Request to Controller (http://mydomain.com/home/about). Controller interacts with Model and View. Controller sends Response back to Browser.)<br>
+                    <strong>Request Flow in MVC Architecture</strong>
+                </div>
+
+                <h2>Request/Response in MVC Architecture</h2>
+                <p>As per the above figure, when the user enters a URL in the browser, it goes to the server and calls appropriate controller. Then, the Controller uses the appropriate View and Model and creates the response and sends it back to the user. We will see the details of the interaction in the next few sections.</p>
+                <p>Visit MSDN to learn MVC in detail.</p>
+
+                <h3>Points to Remember:</h3>
+                <ol>
+                    <li>MVC stands for Model, View and Controller.</li>
+                    <li>Model is responsible for maintaining application data and business logic.</li>
+                    <li>View is a user interface of the application, which displays the data.</li>
+                    <li>Controller handles user's requests and renders appropriate View with Model data.</li>
+                </ol>
+            </article>
+
+            <article id="chapter2" class="section-container">
+                <h1>Chapter 2: Building Your First MVC Application</h1>
+                
+                <h2>2.0 Building Your First MVC Application</h2>
+                <h2>2.1 Creating your first asp.net mvc application</h2>
+                <p>To create a new MVC web application using Visual Studio and understand the basic building blocks of the ASP.NET MVC Application, follow below steps.</p>
+
+                <h3>Creating an mvc application:</h3>
+                <ul>
+                    <li>Open visual studio</li>
+                    <li>Click File > New Project</li>
+                    <li>Select "Web" from "Installed Templates" section</li>
+                    <li>Select ASP.NET MVC 4 Web Application</li>
+                    <li>Set Name="MVCDemo"</li>
+                    <li>Click OK</li>
+                    <li>Select "Empty" template. Select "Razor" as the ViewEngine.</li>
+                </ul>
+
+                <p>There are 2 built in view engines - Razor and ASPX. Razor is preferred by most mvc developers. We will discuss about Razor view engine in detail in a later session.</p>
+                <p>At this point you should have an mvc application created.</p>
+                <p>Notice that in the solution explorer, you have several folders - Models, Views, Controllers etc. As the names suggest these folders are going to contain Models, Views, and Controllers. We will discuss about Models, Views, and Controllers in a later session.</p>
+
+                <h3>Now let's add a controller to our project</h3>
+                <ul>
+                    <li>Right Click on "Controllers" folder</li>
+                    <li>Select Add > Controller</li>
+                    <li>Set Controller Name = HomeController</li>
+                    <li>Leave rest of the defaults and click "Add"</li>
+                </ul>
+
+                <p>We should have HomeController.cs added to "Controllers" folder.</p>
+                <p>At this point run the application by pressing CTRL+F5. Notice that you get an error as shown below.</p>
+
+                <div class="error-block">
+Server Error in '/' Application.
+
+The view 'Index' or its master was not found or no view engine supports the searched locations. The following locations were searched:
+~/Views/Home/Index.aspx
+~/Views/Home/Index.ascx
+~/Views/Shared/Index.aspx
+~/Views/Shared/Index.ascx
+~/Views/Home/Index.cshtml
+~/Views/Home/Index.vbhtml
+~/Views/Shared/Index.cshtml
+~/Views/Shared/Index.vbhtml
+                </div>
+
+                <p>To fix this error, we need to add a view with name, "Index". We will discuss about views in detail in a later session.</p>
+                <p>Let's fix it another way. The following is the function that is automatically added to HomeController class</p>
+
+<pre><div class="code-header">C#</div><code>public ActionResult Index()
+{
+return View();
+}</code></pre>
+
+                <p>Change the return type of Index() function from "ActionResult" to "string", and return string "Hello from MVC Application" instead of View().</p>
+
+<pre><div class="code-header">C#</div><code>public string Index()
+{
+return "Hello from MVC Application";
+}</code></pre>
+
+                <p>Run the application and notice that, the string is rendered on the screen. When you run the application, by default it is using built-in asp.net development server. Let's use IIS, to run the application instead of the built-in asp.net development server.</p>
+
+                <ul>
+                    <li>In the solution explorer, right click on the project and select "Properties"</li>
+                    <li>Click on "Web" tab</li>
+                    <li>Select "Use Local IIS Web Server" radio button</li>
+                    <li>Notice that the Project Url is set to http://localhost/MVCDemo by default</li>
+                    <li>Finally click on "Create Virtual Directory" button</li>
+                </ul>
+
+                <div class="diagram">
+                    (Image Diagram: A screenshot of the Visual Studio project properties page showing the 'Web' tab with the 'Use Local IIS Web server' option selected and the Project Url set to http://localhost/MVCDemo)
+                </div>
+
+                <p>Run the application, and notice that the URL is http://localhost/MVCDemo/</p>
+                <p>Now change the URL to "http://localhost/MVCDemo/Home/index"</p>
+                <p>In the URL "Home" is the name of the controller and "Index" is the method within HomeController class.</p>
+
+                <p>So the improtant point to understand is that the URL is mapped to a controller action method. Where as in web forms application, the URL is mapped to a physical file. For example, in a web application, if we have to display the same message.</p>
+                
+                <p>We add a webform and in the Page_load() event include Response.Write("Hello from ASP.NET Web Forms Application");</p>
+                <p>We then access WebForm1.aspx as shown below<br>http://localhost/WebFormsApplication/WebForm1.aspx</p>
+                <p>The Page load event gets executed and the message string is displayed.</p>
+            </article>
+
+            <article id="chapter3" class="section-container">
+                <h1>Chapter 3: Controllers in MVC</h1>
+                
+                <h2>3.0 Controllers in MVC</h2>
+                <h2>3.1 Controllers in an mvc application</h2>
+                <p>Let Us discussed that, the URL - http://localhost/MVCDemo/Home/Index will invoke Index() function of HomeController class. So, the question is, where is this mapping defined. The mapping is defined in Global.asax. Notice that in Global.asax we have RegisterRoutes() method.</p>
+                
+                <p>RouteConfig.RegisterRoutes(RouteTable.Routes);</p>
+                <p>Right click on this method, and select "Go to Definition". Notice the implementation of RegisterRoutes() method in RouteConfig class. This method has got a default route.</p>
+
+<pre><div class="code-header">C#</div><code>public static void RegisterRoutes(RouteCollection routes)
+{
+routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
+
+routes.MapRoute(
+name: "Default",
+url: "{controller}/{action}/{id}",
+defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+);
+}</code></pre>
+
+                <p>The following URL does not have id. This is not a problem because id is optional in the default route.http://localhost/MVCDemo/Home/Index</p>
+                <p>Now pass id in the URL as shown below and press enter. Nothing happens.http://localhost/MVCDemo/Home/Index/10</p>
+                
+                <p>Change the Index() function in HomeController as shown below.</p>
+
+<pre><div class="code-header">C#</div><code>public string Index(string id)
+{
+return "The value of Id = " + id;
+}</code></pre>
+
+                <p>Enter the following URL and press enter. We get the output as expected.http://localhost/MVCDemo/Home/Index/10</p>
+                <p>In the following URL, 10 is the value for id parameter and we also have a query string "name".<br>http://localhost/MVCDemo/home/index/10?name=Pragim</p>
+                
+                <p>Change the Index() function in HomeController as shown below, to read both the parameter values.</p>
+
+<pre><div class="code-header">C#</div><code>public string Index(string id, string name)
+{
+return "The value of Id = " + id + " and Name = " + name;
+}</code></pre>
+
+                <p>Just like web forms, you can also use "Request.QueryString"</p>
+
+<pre><div class="code-header">C#</div><code>public string Index(string id)
+{
+return "The value of Id = " + id + " and Name = " + Request.QueryString["name"];
+}</code></pre>
+
+                <h2>3.2 Views in an mvc application</h2>
+                <p>In this unit we will discuss views.Let's change the Index() method in HomeController to return a list of country names. Since country names are strings, return List&lt;string&gt;. Get rid of id and name parameters.</p>
+
+<pre><div class="code-header">C#</div><code>public List&lt;string&gt; Index()
+{
+return new List&lt;string&gt;()
+{
+"India",
+"US",
+"UK",
+"Canada"
+};
+}</code></pre>
+
+                <p>Run the application and notice that the output is not as expected.System.Collections.Generic.List`1[System.String]</p>
+                <p>To correct this problem, let's add a view to our project.</p>
+                
+                <ul>
+                    <li>Right click on the Index() function</li>
+                    <li>Click on "Add View"</li>
+                    <li>Notice that, the view name in "Add View" dialog box matches the name of the controller action method</li>
+                    <li>Select "Razor" as the view engine</li>
+                    <li>Leave the rest of the defaults as is, and click "Add" button</li>
+                </ul>
+
+                <p>Make the following modifications to the Index() function of the HomeController class, so that, the HomeController returns a view instead of List&lt;string&gt;.</p>
+
+<pre><div class="code-header">C#</div><code>// Change the return type from List&lt;string&gt; to ActionResultpublic ActionResult Index()
+{
+// Store the list of Countries in ViewBag.
+ViewBag.Countries = new List&lt;string&gt;()
+{
+"India",
+"US",
+"UK",
+"Canada"
+};
+
+// Finally return a view
+return View();
+}</code></pre>
+
+                <p>We will discuss ViewBag & ViewData, and the differences between them in our next session. For now, understand that, ViewBag & ViewData is a mechanism to pass data from the controller to the view.</p>
+                <p>Please Note: To pass data from controller to a view, It's always a good practice to use strongly typed view models instead of using ViewBag & ViewData. We will discuss view models in a later session.</p>
+                
+                <p>Now, copy and paste the following code in "Index.cshtml" view</p>
+
+<pre><div class="code-header">HTML</div><code>@{
+ViewBag.Title = "Countries List";
+}&lt;h2&gt;Countries List&lt;/h2&gt;&lt;ul&gt;
+
+@foreach (string strCountry in ViewBag.Countries)
+{
+&lt;li&gt;@strCountry&lt;/li&gt;
+}&lt;/ul&gt;</code></pre>
+
+                <p>Please Note: We use "@" symbol to switch between html and c# code. We will discuss razor views and their syntax in a later session.</p>
+
+                <h2>3.3 ViewData and ViewBag in mvc</h2>
+                <p>In this unit we will discuss<br>
+                What is ViewData<br>
+                What is ViewBag<br>
+                Difference between ViewData and ViewBag</p>
+
+                <p>Both ViewData and ViewBag are used to pass data from a controller to a view. ViewData is a dictionary of objects that are stored and retrieved using strings as keys. The syntax of ViewData is very similar to that of ViewState, SessionState and ApplicationState.</p>
+
+<pre><div class="code-header">C#</div><code>// Storing data in ViewData
+ViewData["YourData"] = "SomeData";// Retrieving data from ViewDatastring strData = ViewData["YourData"].ToString();</code></pre>
+
+                <p>ViewData does not provide compile time error checking. For example, if you mis-spell the key names you wouldn't get any compile time error. You get to know about the error only at runtime.</p>
+                
+                <p>ViewBag uses the dynamic feature that was introduced in to C# 4.0. It allows an object to have properties dynamically added to it. Using ViewBag the above code can be rewritten as below.</p>
+
+<pre><div class="code-header">C#</div><code>// Storing data in ViewBag
+ViewBag.YourData = "SomeData";// Retrieving data from ViewBagstring strData = ViewBag.YourData;</code></pre>
+
+                <p>Just like ViewData, ViewBag does not provide compile time error checking. For example, if you mis-spell the property name, you wouldn't get any compile time error. You get to know about the error only at runtime.</p>
+                <p>Internally ViewBag properties are stored as name/value pairs in the ViewData dictionary</p>
+
+                <h2>3.4 Models in an mvc application</h2>
+                <p>In this unit we will discuss models in an mvc application.</p>
+                <p>Let's understand models with an example. We want to retrieve an employee information from tblEmployee table and display it as shown below.Employee Details<br>
+                Employee ID: 101<br>
+                Name: John<br>
+                Gender: Male<br>
+                City: London</p>
+
+                <p>To encapsulate Employee information, add Employee model class to the Models folder. To do this</p>
+                <ul>
+                    <li>Right click on "Models" folder > Add > Class</li>
+                    <li>Name the class as Employee.cs</li>
+                    <li>Click "Add"</li>
+                </ul>
+
+                <p>Copy and paste the following code in Employee.cs class file.</p>
+
+<pre><div class="code-header">C#</div><code>public class Employee
+{
+public int EmployeeId { get; set; }
+public string Name { get; set; }
+public string Gender { get; set; }
+public string City { get; set; }
+}</code></pre>
+
+                <p>Now let's Add EmployeeController class to "Controllers" folder. To do this</p>
+                <ul>
+                    <li>Right click on "Controllers" folder > Add > Controller</li>
+                    <li>Use EmployeeController as the name</li>
+                    <li>Click "Add"</li>
+                </ul>
+
+                <p>We want to use "Employee" model class in EmployeeController. So copy and paste the following "using" statement in "EmployeeController.cs"<br>
+                using MVCDemo.Models;</p>
+
+                <p>By default an Index() Action method is created in EmployeeController. Change the name of the function to Details(). Create an instance of Employee class. For now we will hard code Employee data in this class. In a later session, we will discuss about retrieving employee information from the database table tblEmployee. At this point EmployeeController should look as shown below.</p>
+
+<pre><div class="code-header">C#</div><code>public ActionResult Details()
+{
+Employee employee = new Employee()
+{
+EmployeeId = 101,
+Name = "John",
+Gender = "Male",
+City = "London"
+};
+
+return View();
+}</code></pre>
+
+                <p>Now, we need to pass the employee model object that we constructed in EmployeeController to a view, so the view can generate the HTML and send it to the requested client. To do this we first need to add a view. To add a view</p>
+                <ul>
+                    <li>Right click on Details() action method and select "Add View" from the context menu</li>
+                    <li>Set<br>
+                    a) View Name = Details<br>
+                    b) View Engine = Razor<br>
+                    c) Select "Create strongly typed view" check box<br>
+                    d) From the "Model class" dropdownlist, select "Employee (MVCDemo.Models)"</li>
+                    <li>Note: If Employee class is not visible in the dropdownlist, please build your project and then try adding the view again.</li>
+                    <li>Finally click "Add"</li>
+                </ul>
+
+                <p>At this point, Details.cshtml should be added to "Employee" folder. Please note that "Employee" folder is automatically created and added to "Views" folder.</p>
+                <p>Copy and paste the following code in Details.cshtml file.</p>
+
+<pre><div class="code-header">HTML</div><code>@model MVCDemo.Models.Employee
+
+@{
+ViewBag.Title = "Employee Details";
+}&lt;h2&gt;Employee Details&lt;/h2&gt;&lt;table style="font-family:Arial"&gt;
+&lt;tr&gt;
+&lt;td&gt;
+Employee ID:
+&lt;/td&gt;
+&lt;td&gt;
+@Model.EmployeeId
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;
+Name:
+&lt;/td&gt;
+&lt;td&gt;
+@Model.Name
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;
+Gender:
+&lt;/td&gt;
+&lt;td&gt;
+@Model.Gender
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;
+City:
+&lt;/td&gt;
+&lt;td&gt;
+@Model.City
+&lt;/td&gt;
+&lt;/tr&gt;&lt;/table&gt;</code></pre>
+
+                <p>At this point if you run the project, and if you navigate to the following URL, you get a runtime error stating - Object reference not set to an instance of an object.http://localhost/MVCDemo/Employee/Details</p>
+                <p>To fix this error, pass "Employee" object to the view. The "return" statement in Details() action method need to be modified as shown below.return View(employee);</p>
+                <p>That's it. Run the application and navigate to http://localhost/MVCDemo/Employee/Details. We should get the output as expected.</p>
+            </article>
+
+            <article id="chapter4" class="section-container">
+                <h1>Chapter 4: Views in MVC</h1>
+                
+                <h2>4.0 Views in MVC</h2>
+                <h2>4.1 Data access in mvc using entity framework</h2>
+                <p>The controller responds to URL request, gets data from a model and hands it over to the view. The view then renders the data. Model can be entities or business objects.</p>
+                <p>In chapter 3, we have built Employee entity.</p>
+
+<pre><div class="code-header">C#</div><code>public class Employee
+{
+public int EmployeeId { get; set; }
+public string Name { get; set; }
+public string Gender { get; set; }
+public string City { get; set; }
+}</code></pre>
+
+                <p>In this Session, we will discuss, retrieving data from a database table tblEmployee using entity framework. In a later Session, we will discuss using business objects as our model.</p>
+                
+                <p>Step 1: Install entity framework, if you don't have it installed already on your computer. At the time of this recording the latest version is 5.0.0.0. Using nuget package manager, is the easiest way to install. A reference to EntityFramework.dll is automatically added.<br>
+                Open visual studio > Tools > Library Package Manager > Manage NuGet Packages for Solution</p>
+                
+                <p>Step 2: Add EmployeeContext.cs class file to the Models folder. Add the following "using" declaration.<br>
+                using System.Data.Entity;</p>
+                <p>Copy & paste the following code in EmployeeContext.cs</p>
+
+<pre><div class="code-header">C#</div><code>public class EmployeeContext : DbContext
+{
+public DbSet&lt;Employee&gt; Employees {get; set;}
+}</code></pre>
+
+                <p>EmployeeContext class derives from DbContext class, and is responsible for establishing a connection to the database. So the next step, is to include connection string in web.config file.</p>
+
+                <p>Step 3: Add a connection string, to the web.config file, in the root directory.</p>
+
+<pre><div class="code-header">XML</div><code>&lt;connectionStrings&gt;
+&lt;add name="EmployeeContext"
+connectionString="server=.; database=Sample; integrated security=SSPI"
+providerName="System.Data.SqlClient"/&gt;&lt;/connectionStrings&gt;</code></pre>
+
+                <p>Step 4: Map "Employee" model class to the database table, tblEmployee using "Table" attribute as shown below.</p>
+
+<pre><div class="code-header">C#</div><code>[Table("tblEmployee")]public class Employee
+{
+public int EmployeeId { get; set; }
+public string Name { get; set; }
+public string Gender { get; set; }
+public string City { get; set; }
+}</code></pre>
+
+                <p>Note: "Table" attribute is present in System.ComponentModel.DataAnnotations.Schema" namespace.</p>
+
+                <p>Step 5: Make the changes to "Details()" action method in "EmployeeController" as shown below.</p>
+
+<pre><div class="code-header">C#</div><code>public ActionResult Details(int id)
+{
+EmployeeContext employeeContext = new EmployeeContext();
+Employee employee = employeeContext.Employees.Single(x =&gt; x.EmployeeId == id);
+
+return View(employee);
+}</code></pre>
+
+                <p>Step 6: Finally, copy and paste the following code in Application_Start() function, in Global.asax file. Database class is present in "System.Data.Entity" namespace. Existing databases do not need, database initializer so it can be turned off.</p>
+
+<pre><div class="code-header">C#</div><code>Database.SetInitializer&lt;MVCDemo.Models.EmployeeContext&gt;(null);</code></pre>
+
+                <p>That's it, run the application and navigate to the following URL's and notice that the relevant employee details are displayed as expected<br>
+                http://localhost/MVCDemo/Employee/details/1<br>
+                http://localhost/MVCDemo/Employee/details/2</p>
+            </article>
+
+            <article id="qa" class="section-container">
+                <h1>Complete Q & A Review</h1>
+                
+                <div class="qa-box">
+                    <h4>Q: What does MVC stand for and what are its components?</h4>
+                    <p><strong>A:</strong> MVC stands for Model, View, and Controller. Model maintains application data and business logic. View is the user interface that displays the data. Controller is the request handler that routes requests, manipulates the model, and renders the appropriate view.</p>
+                </div>
+
+                <div class="qa-box">
+                    <h4>Q: How does URL mapping differ in MVC vs Web Forms?</h4>
+                    <p><strong>A:</strong> In Web Forms, a URL maps to a physical file (like WebForm1.aspx). In MVC, the URL maps directly to a Controller Action Method (like /Home/Index maps to the Index method of HomeController class).</p>
+                </div>
+
+                <div class="qa-box">
+                    <h4>Q: What is the difference between ViewData and ViewBag?</h4>
+                    <p><strong>A:</strong> Both pass data from a controller to a view and lack compile-time error checking. ViewData is a dictionary of objects requiring string keys. ViewBag uses C# 4.0 dynamic features allowing property assignment dynamically. Internally, ViewBag properties are stored as name/value pairs in the ViewData dictionary.</p>
+                </div>
+
+                <div class="qa-box">
+                    <h4>Q: Why do we use strongly typed views?</h4>
+                    <p><strong>A:</strong> It is always a good practice to pass data from a controller to a view using strongly typed view models instead of ViewBag/ViewData. This avoids runtime errors and allows the view to directly access model properties.</p>
+                </div>
+
+                <div class="qa-box">
+                    <h4>Q: How do you access a database using Entity Framework in an MVC application?</h4>
+                    <p><strong>A:</strong> 1) Install Entity Framework via NuGet. 2) Create a Context class deriving from DbContext containing a DbSet property. 3) Add the connection string to web.config. 4) Use the [Table] attribute on the Model class to map it to the database table. 5) Instantiate the Context class in the Controller and use LINQ to query the database.</p>
+                </div>
+            </article>
+
+            <article id="summary" class="section-container">
+                <h1>Final Summary</h1>
+                <p>The MVC (Model-View-Controller) architecture separates an application into three main components: the Model (data and business logic), the View (user interface), and the Controller (request handler). ASP.NET MVC routes URLs to specific Controller Action Methods defined in Global.asax (e.g., {controller}/{action}/{id}), rather than physical files as seen in Web Forms.</p>
+                
+                <p>To build an application, developers add a Controller class and return a View, a string, or an ActionResult. To pass data to views, ViewBag and ViewData are available, but passing strongly typed View Models provides a better, safer approach.</p>
+                
+                <p>Finally, data access is handled by integrating Entity Framework. By creating a DbContext class, defining the connection in the web.config, mapping models with the [Table] attribute, and querying via LINQ inside the Controller, developers can retrieve data from databases like tblEmployee and pass it dynamically to their Views.</p>
+            </article>
+
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.section-container');
+            const mainScroll = document.getElementById('mainScroll');
+
+            // Handle Mobile Sidebar Toggle
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+
+            // Handle URL Hash Changes for Routing
+            function handleRouting() {
+                // Get the hash from URL, default to 'chapter1'
+                let hash = window.location.hash.substring(1) || 'chapter1';
+                
+                // Hide all sections
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Remove active class from all links
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+
+                // Show target section and highlight link
+                const targetSection = document.getElementById(hash);
+                const targetLink = document.querySelector(`.nav-link[data-target="${hash}"]`);
+
+                if (targetSection && targetLink) {
+                    targetSection.classList.add('active');
+                    targetLink.classList.add('active');
+                } else {
+                    // Fallback if hash is invalid
+                    document.getElementById('chapter1').classList.add('active');
+                    document.querySelector('.nav-link[data-target="chapter1"]').classList.add('active');
+                }
+
+                // Scroll to top of main content area
+                mainScroll.scrollTo(0, 0);
+
+                // Close sidebar on mobile after clicking
+                if (window.innerWidth <= 1024) {
+                    sidebar.classList.remove('open');
+                }
+            }
+
+            // Listen for browser navigation (back/forward buttons)
+            window.addEventListener('hashchange', handleRouting);
+
+            // Initial load check
+            handleRouting();
+        });
+    </script>
 </body>
 </html>
